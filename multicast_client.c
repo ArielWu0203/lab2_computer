@@ -5,7 +5,9 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
- 
+#include <string.h>
+#include <unistd.h>
+
 struct sockaddr_in localSock;
 struct ip_mreq group;
 int sd;
@@ -53,12 +55,12 @@ int main(int argc, char *argv[])
 	else
 		printf("Binding datagram socket...OK.\n");
 	 
-	/* Join the multicast group 226.1.1.1 on the local 203.106.93.94 */
+	/* Join the multicast group 226.1.1.1 on the local 127.0.0.1 */
 	/* interface. Note that this IP_ADD_MEMBERSHIP option must be */
 	/* called for each local interface over which the multicast */
 	/* datagrams are to be received. */
 	group.imr_multiaddr.s_addr = inet_addr("226.1.1.1");
-	group.imr_interface.s_addr = inet_addr("192.168.32.143");
+	group.imr_interface.s_addr = inet_addr("127.0.0.1");
 	if(setsockopt(sd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char *)&group, sizeof(group)) < 0)
 	{
 		perror("Adding multicast group error");
@@ -80,6 +82,24 @@ int main(int argc, char *argv[])
 	{
 		printf("Reading datagram message...OK.\n");
 		printf("The message from multicast server is: \"%s\"\n", databuf);
-	}
+    }
+    int localSock_len = sizeof(localSock_len);
+    if (!strcmp(databuf,"Start")) {
+        FILE *fp;
+        int recv_len;
+        if ((fp = fopen(argv[1],"wb")) == NULL) {
+            perror("Eroor opening the file.");
+        }
+        bzero(databuf,datalen);
+        while ((recv_len = recvfrom(sd,databuf,sizeof(databuf),0,(struct sockaddr*)&localSock,&localSock_len)) > 0) {
+            int n = fwrite(databuf,sizeof(char),recv_len,fp);
+            bzero(databuf,datalen);
+            if(recv_len < datalen) {
+                break;
+            }
+        }
+        fclose(fp);
+        close(sd);
+    }
 	return 0;
 }

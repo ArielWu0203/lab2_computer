@@ -5,6 +5,9 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 struct in_addr localInterface;
 struct sockaddr_in groupSock;
 int sd;
@@ -24,7 +27,7 @@ int main (int argc, char *argv[ ])
 	  printf("Opening the datagram socket...OK.\n");
 	 
 	/* Initialize the group sockaddr structure with a */
-	/* group address of 225.1.1.1 and port 5555. */
+	/* group address of 226.1.1.1 and port 4321. */
 	memset((char *) &groupSock, 0, sizeof(groupSock));
 	groupSock.sin_family = AF_INET;
 	groupSock.sin_addr.s_addr = inet_addr("226.1.1.1");
@@ -47,7 +50,7 @@ int main (int argc, char *argv[ ])
 	/* Set local interface for outbound multicast datagrams. */
 	/* The IP address specified must be associated with a local, */
 	/* multicast capable interface. */
-	localInterface.s_addr = inet_addr("192.168.32.143");
+	localInterface.s_addr = inet_addr("127.0.0.1");
 	if(setsockopt(sd, IPPROTO_IP, IP_MULTICAST_IF, (char *)&localInterface, sizeof(localInterface)) < 0)
 	{
 	  perror("Setting local interface error");
@@ -58,13 +61,27 @@ int main (int argc, char *argv[ ])
 	/* Send a message to the multicast group specified by the*/
 	/* groupSock sockaddr structure. */
 	/*int datalen = 1024;*/
+    strcpy(databuf,"Start");
 	if(sendto(sd, databuf, datalen, 0, (struct sockaddr*)&groupSock, sizeof(groupSock)) < 0)
 	{
 		perror("Sending datagram message error");
 	}
 	else
 	  printf("Sending datagram message...OK\n");
-	 
+
+    // Sever sends file.
+    FILE *fp;
+    fp = fopen(argv[1],"rb");
+    if(fp < 0) {
+        perror("ERROR opening the file.");
+    }
+    bzero(databuf,datalen);
+    int read_len,send_len;
+    while ((read_len = fread(databuf,sizeof(char),datalen,fp)) > 0) {
+        send_len = sendto(sd,databuf,read_len,0,(struct sockaddr*)&groupSock, sizeof(groupSock));
+        bzero(databuf,datalen);
+    }
+    fclose(fp);
 	/* Try the re-read from the socket if the loopback is not disable
 	if(read(sd, databuf, datalen) < 0)
 	{
