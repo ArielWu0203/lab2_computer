@@ -91,12 +91,23 @@ int main(int argc, char *argv[])
             perror("Eroor opening the file.");
         }
         bzero(databuf,datalen);
+        /*total : Accept # of packets*/
+        int total = 0;
+
         while ((recv_len = recvfrom(sd,databuf,sizeof(databuf),0,(struct sockaddr*)&localSock,&localSock_len)) > 0) {
             int n = fwrite(databuf,sizeof(char),recv_len,fp);
+            total++;
             bzero(databuf,datalen);
             if(recv_len < datalen) {
                 break;
             }
+        }
+        recv_len = recvfrom(sd,databuf,sizeof(databuf),0,(struct sockaddr*)&localSock,&localSock_len);
+        if(!strncmp(databuf,"Stop",4)) {
+            // n : total packets
+            int n = atoi(databuf+4);
+            printf("Packet loss rate : %f %%\n",(float)(n-total)/n);
+
         }
         fclose(fp);
         close(sd);

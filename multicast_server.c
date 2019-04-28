@@ -77,12 +77,22 @@ int main (int argc, char *argv[ ])
     }
     bzero(databuf,datalen);
     int read_len,send_len;
+    /* total : # of packets */
+    int total = 0;
     while ((read_len = fread(databuf,sizeof(char),datalen,fp)) > 0) {
         send_len = sendto(sd,databuf,read_len,0,(struct sockaddr*)&groupSock, sizeof(groupSock));
         bzero(databuf,datalen);
+        total++;
     }
     fclose(fp);
-	/* Try the re-read from the socket if the loopback is not disable
+    bzero(databuf,datalen);
+    strcpy(databuf,"Stop");
+    sprintf(databuf+strlen(databuf),"%d",total);
+    send_len = sendto(sd,databuf,datalen,0,(struct sockaddr*)&groupSock, sizeof(groupSock));
+    printf("Total packets : %s\n",databuf);
+    sleep(3);
+    close(sd);
+    /* Try the re-read from the socket if the loopback is not disable
 	if(read(sd, databuf, datalen) < 0)
 	{
 	perror("Reading datagram message error\n");
