@@ -113,7 +113,6 @@ int main(int argc, char *argv[])
             total++;
             bzero(databuf,datalen);
             bzero(datadec,n);
-            printf("recv_len : %d\n",recv_len);
 
             if(recv_len < datalen) {
                 break;
@@ -122,7 +121,7 @@ int main(int argc, char *argv[])
 
         // Destroy the fec object
         fec_destroy(q);
-
+        // Calculate the packet loss rate
         recv_len = recvfrom(sd,databuf,sizeof(databuf),0,(struct sockaddr*)&localSock,&localSock_len);
         if(!strncmp(databuf,"Stop",4)) {
             // n : total packets
@@ -131,6 +130,7 @@ int main(int argc, char *argv[])
 
         }
         printf("%d\n",total);
+        // clode the socket after 3 secs
         fclose(fp);
         close(sd);
     }

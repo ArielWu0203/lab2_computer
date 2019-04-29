@@ -94,6 +94,7 @@ int main(int argc, char *argv[])
         /*total : Accept # of packets*/
         int total = 0;
 
+        // Recive the file.
         while ((recv_len = recvfrom(sd,databuf,sizeof(databuf),0,(struct sockaddr*)&localSock,&localSock_len)) > 0) {
             int n = fwrite(databuf,sizeof(char),recv_len,fp);
             total++;
@@ -102,6 +103,8 @@ int main(int argc, char *argv[])
                 break;
             }
         }
+        // Recieve # of packets
+        // Calculate the packet loss rate.
         recv_len = recvfrom(sd,databuf,sizeof(databuf),0,(struct sockaddr*)&localSock,&localSock_len);
         if(!strncmp(databuf,"Stop",4)) {
             // n : total packets
@@ -109,6 +112,7 @@ int main(int argc, char *argv[])
             printf("Packet loss rate : %f %%\n",(float)(n-total)/n);
 
         }
+        // close file & socket
         fclose(fp);
         close(sd);
     }
